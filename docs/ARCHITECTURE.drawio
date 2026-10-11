@@ -1,0 +1,63 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="QSD1QxBytQHPSjgSIhdy">
+    <mxGraphModel dx="1030" dy="674" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-17" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Y9DaN4tYbUH3Y0XPqTTf-7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Mid BPF" vertex="1">
+          <mxGeometry height="60" width="120" x="365" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-21" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Y9DaN4tYbUH3Y0XPqTTf-8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Bass LPF" vertex="1">
+          <mxGeometry height="60" width="120" x="233" y="241" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-22" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Y9DaN4tYbUH3Y0XPqTTf-9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Treble HPF" vertex="1">
+          <mxGeometry height="60" width="120" x="497" y="241" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-18" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Y9DaN4tYbUH3Y0XPqTTf-11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Mid gain" vertex="1">
+          <mxGeometry height="60" width="120" x="365" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Bass Gain" vertex="1">
+          <mxGeometry height="60" width="120" x="233" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Treble Gain" vertex="1">
+          <mxGeometry height="60" width="120" x="497" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-16" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" value="">
+          <mxGeometry relative="1" x="0.2253" as="geometry">
+            <mxPoint x="425" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=17;" value="Audio Input (16-bit signed)" vertex="1">
+          <mxGeometry height="30" width="227.5" x="311.75" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-19" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Y9DaN4tYbUH3Y0XPqTTf-12" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-11" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=16;" value="&#xa;&lt;span&gt;Mixer &lt;/span&gt;&lt;span&gt;/ &lt;/span&gt;&lt;span&gt;Adder&lt;/span&gt;&#xa;&#xa;" vertex="1">
+          <mxGeometry height="30" width="130" x="360" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-20" edge="1" parent="1" source="Y9DaN4tYbUH3Y0XPqTTf-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="Y9DaN4tYbUH3Y0XPqTTf-13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=16;" value="Saturation (16-bit)" vertex="1">
+          <mxGeometry height="30" width="145" x="353" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="Y9DaN4tYbUH3Y0XPqTTf-13" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=16;" value="Audio Output (16-bit signed)" vertex="1">
+          <mxGeometry height="30" width="204.5" x="323" y="630" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
