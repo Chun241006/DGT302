@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// Bass band: low-pass FIR, nominal cutoff 300 Hz at 48 kHz sample rate.
+// Bass band: low-pass FIR, design cutoff 200 Hz at 48 kHz sample rate.
 module bass_filter #(
     parameter COEFF_FILE = "dsp/coefficients/bass_coeff.mem"
 )(

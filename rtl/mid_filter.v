@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// Mid band: band-pass FIR, nominal passband 300-4000 Hz at 48 kHz.
+// Mid band: band-pass FIR, design cutoff 250-3800 Hz at 48 kHz.
 module mid_filter #(
     parameter COEFF_FILE = "dsp/coefficients/mid_coeff.mem"
 )(
