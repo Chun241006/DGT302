@@ -1,82 +1,439 @@
-# 🎛️ Digital Audio Equalizer (3-Band FIR Filter in Verilog HDL)
+# Digital Audio Equalizer using Verilog HDL
 
-Hệ thống xử lý âm thanh số **Digital Audio Equalizer 3 dải** (Bass, Mid, Treble) triển khai trên phần cứng FPGA/ASIC bằng ngôn ngữ Verilog HDL. Hệ thống hoạt động tại tần số lấy mẫu $48\text{ kHz}$, tích hợp bộ lọc FIR Type-1 Linear Phase $31\text{ Taps}$, Gain Control định dạng $Q8.8$, Mixer và module Saturation chống tràn số.
+**DGT302 — Digital Signal Processing | 3-Band FIR Digital Audio Equalizer**
 
-Dự án bao gồm mô hình tham chiếu **Bit-Exact Python Golden Model** giúp tự động hóa quá trình xác minh (Co-simulation Verification) với kết quả đạt **MATCH 100% (0 mismatch)**.
+This project implements a digital **3-Band Audio Equalizer** using Verilog HDL. The system processes 16-bit signed audio samples through three independent Finite Impulse Response (FIR) filter paths: Bass, Midrange, and Treble. Each frequency band has an independent gain control, allowing the filtered signals to be adjusted and combined into a single audio output.
 
----
+The design uses **31-tap Type-I Linear Phase FIR filters** with Hamming window coefficients, fixed-point arithmetic, gain control, signal mixing, and saturation protection. A Python reference model is also provided to calculate expected integer outputs for RTL verification.
 
-## 📑 Mục lục (Table of Contents)
-- [1. Tính năng nổi bật (Key Features)](#1-tính-năng-nổi-bật-key-features)
-- [2. Thông số Kỹ thuật (System Specifications)](#2-thông-số-kỹ-thuật-system-specifications)
-- [3. Cấu trúc Thư mục Dự án (Project Structure)](#3-cấu-trúc-thư-mục-dự-án-project-structure)
-- [4. Kiến trúc Hệ thống Phân tầng (Top-Down Architecture)](#4-kiến-trúc-hệ-thống-phân-tầng-top-down-architecture)
-- [5. Quy tắc Tính toán Số cố định (Fixed-Point Arithmetic Contract)](#5-quy-tắc-tính-toán-số-cố-định-fixed-point-arithmetic-contract)
-- [6. Hướng dẫn Tái tạo Dữ liệu & Mô phỏng (Reproduction & Simulation)](#6-hướng-dẫn-tái-tạo-dữ-liệu--mô-phỏng-reproduction--simulation)
-  - [Bước 1: Tạo Hệ số Bộ lọc & Đồ thị Đáp ứng Tần số](#bước-1-tạo-hệ-số-bộ-lọc--đồ-thị-đáp-ứng-tần-số)
-  - [Bước 2: Tạo Test Vector & Chạy Golden Model](#bước-2-tạo-test-vector--chạy-golden-model)
-  - [Bước 3: Chạy Mô phỏng RTL Testbench](#bước-3-chạy-mô-phỏng-rtl-testbench)
-- [7. Kết quả Kiểm thử & Đối chiếu (Verification Results)](#7-kết-quả-kiểm-thử--đối-chiếu-verification-results)
-- [8. Đánh giá & Giới hạn Kỹ thuật (Design Trade-offs)](#8-đánh-giá--giới-hạn-kỹ-thuật-design-trade-offs)
+**Scope:** Digital signal processing architecture, Verilog RTL implementation, fixed-point arithmetic, and simulation-based functional verification. The repository does not claim verified FPGA/ASIC hardware deployment.
 
 ---
 
-## 1. Tính năng nổi bật (Key Features)
-- **3-Band Equalizer:** Phân tách và điều chỉnh độc lập 3 dải âm thanh Bass ($<200\text{ Hz}$), Mid ($250 - 3800\text{ Hz}$) và Treble ($>4000\text{ Hz}$).
-- **Linear Phase Type-1 FIR:** Sử dụng $31\text{ Taps}$ (Group Delay $D = 15\text{ samples}$) giúp bảo toàn pha của tín hiệu audio, không gây méo pha.
-- **Bit-Exact Golden Model:** Script Python mô phỏng chính xác từng bit với RTL, tự động hóa quy trình sinh đáp án mẫu (`expected_output.mem`).
-- **Saturation Protection:** Tích hợp bộ xén biên (Saturation) tại từng dải lọc, sau bộ Gain và tại đầu ra Mixer, triệt tiêu hoàn toàn lỗi lật bit (Wrap-around Distortion).
-- **Phù hợp FPGA/ASIC Flow:** Tối ưu hóa bộ nhân DSP, sẵn sàng tổng hợp (Synthesizable) trên Quartus, Vivado hoặc Synopsys DC.
+## 1. System Architecture / Top-Down Design
+
+The equalizer consists of three parallel FIR filter branches. Each branch extracts a different frequency range, applies an independent gain, and sends its output to a common mixer.
+
+```text
+                 Input Audio Samples
+                   Signed 16-bit
+                         |
+                         v
+              +---------------------+
+              |  Audio Equalizer    |
+              |      Top Module     |
+              +---------------------+
+                         |
+          +--------------+--------------+
+          |              |              |
+          v              v              v
+    +-----------+  +-----------+  +-----------+
+    |   Bass    |  |    Mid    |  |  Treble   |
+    |  Low-pass |  | Band-pass |  | High-pass |
+    | FIR 31-Tap|  | FIR 31-Tap|  | FIR 31-Tap|
+    +-----------+  +-----------+  +-----------+
+          |              |              |
+          v              v              v
+    +-----------+  +-----------+  +-----------+
+    | Bass Gain |  |  Mid Gain |  |Treble Gain|
+    |   Q8.8    |  |   Q8.8    |  |   Q8.8    |
+    +-----------+  +-----------+  +-----------+
+          |              |              |
+          +--------------+--------------+
+                         |
+                         v
+                  +-------------+
+                  |    Mixer    |
+                  | 18-bit Sum  |
+                  +-------------+
+                         |
+                         v
+                  +-------------+
+                  | Saturation  |
+                  | Signed 16-bit|
+                  +-------------+
+                         |
+                         v
+                  +-------------+
+                  | Audio Output|
+                  | Signed 16-bit|
+                  +-------------+
+```
+
+**Top-down implementation:** DSP requirements → FIR filter design → coefficient generation → fixed-point representation → individual RTL modules → top-level integration → Python Golden Model → RTL functional verification.
 
 ---
 
-## 2. Thông số Kỹ thuật (System Specifications)
+## 2. Key Features
 
-| Thông số | Giá trị | Ghi chú |
-| :--- | :--- | :--- |
-| **Sampling Rate ($F_s$)** | $48000\text{ Hz}$ ($48\text{ kHz}$) | Tần số lấy mẫu chuẩn Audio PCM |
-| **Filter Topology** | FIR Type-1 Cửa sổ Hamming | $31\text{ Taps}$, Đối xứng (Symmetric) |
-| **Input/Output Sample** | Signed 16-bit (`Q1.15`) | Mã bù 2 Hex, Dải giá trị `[-32768, 32767]` |
-| **Filter Coefficients** | Signed 16-bit (`Q1.15`) | Lưu trong file `$readmemh` Hex |
-| **Gain Control ($G_b, G_m, G_t$)** | Signed 16-bit (`Q8.8`) | Unity Gain ($1.0$) tương ứng `256` (`16'sd256`) |
-| **FIR Accumulator** | Signed 37-bit | Truncation `>>> 15` $\rightarrow$ Saturation 16-bit |
-| **Gain Accumulator** | Signed 32-bit | Truncation `>>> 8` $\rightarrow$ Saturation 16-bit |
-| **Mixer Accumulator** | Signed 18-bit | Mở rộng bit chống tràn $\rightarrow$ Saturation 16-bit |
+- **3-Band Digital Equalizer:** Independently processes Bass, Midrange, and Treble frequency bands.
+- **31-Tap FIR Filters:** Implements Type-I Linear Phase FIR filters with symmetric coefficients and Hamming window design.
+- **Independent Gain Control:** Each frequency band has an adjustable signed Q8.8 gain.
+- **Fixed-Point Arithmetic:** Uses signed Q1.15 audio samples and filter coefficients, with Q8.8 gain representation.
+- **Saturation Protection:** Prevents numerical overflow and wrap-around distortion during filtering, gain multiplication, and signal mixing.
+- **Python Golden Model:** Provides an integer-based reference implementation following the fixed-point arithmetic contract.
+- **Frequency Response Visualization:** Python scripts generate filter coefficients and frequency response plots for all three bands.
 
 ---
 
-## 3. Cấu trúc Thư mục Dự án (Project Structure)
+## 3. System Specifications
+
+| Property | Implementation |
+|---|---|
+| Project | Digital Audio Equalizer |
+| Course | DGT302 — Digital Signal Processing |
+| Language | Verilog HDL |
+| Sampling Frequency | 48 kHz |
+| Filter Architecture | FIR Type-I Linear Phase |
+| Window Function | Hamming Window |
+| Number of Taps | 31 per filter |
+| Bass Filter | Low-pass, 200 Hz cutoff |
+| Mid Filter | Band-pass, 250–3800 Hz |
+| Treble Filter | High-pass, 4000 Hz cutoff |
+| Input/Output Format | Signed 16-bit Q1.15 |
+| Coefficient Format | Signed 16-bit Q1.15 |
+| Gain Format | Signed 16-bit Q8.8 |
+| FIR Accumulator | Signed 37-bit |
+| Gain Accumulator | Signed 32-bit |
+| Mixer Accumulator | Signed 18-bit |
+| Output Protection | Signed 16-bit Saturation |
+
+**Note:** The listed frequency boundaries represent the filter design parameters. They do not imply ideal brick-wall separation between frequency bands.
+
+---
+
+## 4. RTL Modules
+
+| File | Purpose |
+|---|---|
+| `rtl/audio_equalizer_top.v` | Integrates the complete 3-band equalizer |
+| `rtl/fir_filter.v` | Implements the 31-tap FIR filtering operation |
+| `rtl/bass_filter.v` | Bass low-pass filter wrapper |
+| `rtl/mid_filter.v` | Midrange band-pass filter wrapper |
+| `rtl/treble_filter.v` | Treble high-pass filter wrapper |
+| `rtl/gain_control.v` | Applies independent Q8.8 gain and saturation |
+| `rtl/mixer.v` | Combines the three processed frequency bands |
+| `rtl/saturation.v` | Clips signed values to the 16-bit output range |
+
+---
+
+## 5. Repository Structure
 
 ```text
 Digital-Audio-Equalizer-Verilog/
-├── dsp/                        # Phân vùng xử lý tín hiệu DSP (TV1)
-│   ├── coefficients/           # Các file hệ số bộ lọc Hex Q1.15 (.mem)
+│
+├── dsp/
+│   ├── coefficients/
 │   │   ├── bass_coeff.mem
 │   │   ├── mid_coeff.mem
 │   │   └── treble_coeff.mem
-│   ├── plots/                  # Đồ thị đáp ứng tần số (.png)
+│   │
+│   ├── plots/
 │   │   ├── bass_response.png
 │   │   ├── mid_response.png
 │   │   └── treble_response.png
-│   ├── coeff_gen.py            # Script tính hệ số FIR & xuất đồ thị
-│   └── golden_model.py         # Bit-Exact Python Simulator chuẩn RTL
-├── data/                       # Dữ liệu thử nghiệm & Test vectors
-│   ├── input_samples.mem       # Mẫu tín hiệu đầu vào thử nghiệm
-│   ├── expected_output.mem      # Đáp án chuẩn do Golden Model tính toán
-│   ├── test_config.md          # Specification chi tiết về dữ liệu
-│   └── generate_test_data.py   # Script sinh dữ liệu kiểm thử
-├── rtl/                        # Mã nguồn Verilog HDL (TV2)
-│   ├── audio_equalizer_top.v   # Top-level module
-│   ├── fir_filter.v            # Parametric 31-tap FIR Filter
-│   ├── bass_filter.v           # Wrapper Low-pass Filter
-│   ├── mid_filter.v            # Wrapper Band-pass Filter
-│   ├── treble_filter.v         # Wrapper High-pass Filter
-│   ├── gain_control.v          # Q8.8 Gain Multiplier & Saturation
-│   ├── mixer.v                 # 18-bit 3-Band Adder
-│   └── saturation.v            # Module xén biên Signed 16-bit
-├── tb/                         # Testbench mô phỏng Verilog (TV3)
-│   └── tb_audio_equalizer.v    # Verilog Testbench tự động đối chiếu
-├── docs/                       # Tài liệu báo cáo & Specification
+│   │
+│   ├── coeff_gen.py
+│   └── golden_model.py
+│
+├── data/
+│   ├── input_samples.mem
+│   ├── expected_output.mem
+│   ├── test_config.md
+│   └── generate_test_data.py
+│
+├── rtl/
+│   ├── audio_equalizer_top.v
+│   ├── fir_filter.v
+│   ├── bass_filter.v
+│   ├── mid_filter.v
+│   ├── treble_filter.v
+│   ├── gain_control.v
+│   ├── mixer.v
+│   └── saturation.v
+│
+├── tb/
+│   └── tb_audio_equalizer.v
+│
+├── docs/
 │   ├── RTL_INTERFACE_CONTRACT.md
-│   └── FINAL_REPORT.md         # Báo cáo kỹ thuật cuối kỳ hoàn chỉnh
-└── README.md                   # Tài liệu hướng dẫn dự án
+│   └── FINAL_REPORT.md
+│
+├── results/
+├── simulation/
+│   └── results/
+│
+├── Verification.md
+└── README.md
+```
+
+---
+
+## 6. Fixed-Point Arithmetic Design
+
+The system uses fixed-point arithmetic to represent audio samples, FIR coefficients, and gain values in hardware-friendly integer formats.
+
+### 6.1 FIR Filtering
+
+Each FIR filter performs a multiply-accumulate operation:
+
+\[
+y[n]=\sum_{k=0}^{30}h[k]x[n-k]
+\]
+
+Where:
+
+- \(x[n]\): Input audio sample.
+- \(h[k]\): FIR filter coefficient.
+- \(y[n]\): Filtered output sample.
+
+The 37-bit accumulator stores the intermediate sum. The result is shifted right by 15 bits and saturated to signed 16-bit format.
+
+### 6.2 Gain Control
+
+Each frequency band has an independent gain:
+
+\[
+y_{\text{gain}}=
+\operatorname{sat}_{16}
+\left(
+\frac{y_{\text{FIR}}\times G}{256}
+\right)
+\]
+
+The gain uses signed Q8.8 representation.
+
+Unity gain is represented by:
+
+```verilog
+16'sd256
+```
+
+### 6.3 Signal Mixing
+
+The three processed signals are added together:
+
+\[
+y_{\text{mix}}=y_b+y_m+y_t
+\]
+
+Where:
+
+- \(y_b\): Bass output after gain.
+- \(y_m\): Midrange output after gain.
+- \(y_t\): Treble output after gain.
+
+The mixer uses an 18-bit intermediate sum before applying final 16-bit saturation.
+
+### 6.4 Saturation
+
+The final output is limited to the signed 16-bit range:
+
+\[
+-32768\leq y_{\text{out}}\leq32767
+\]
+
+Saturation prevents numerical overflow from wrapping around and producing incorrect audio sample values.
+
+---
+
+## 7. Python DSP Tools and Golden Model
+
+The project includes Python scripts for FIR coefficient generation and reference output calculation.
+
+### Coefficient Generator
+
+`dsp/coeff_gen.py`
+
+This script:
+
+1. Designs three 31-tap FIR filters using the Hamming window.
+2. Generates Bass, Midrange, and Treble coefficients.
+3. Converts floating-point coefficients into signed Q1.15 hexadecimal representation.
+4. Saves coefficient files in `dsp/coefficients/`.
+5. Generates frequency response plots in `dsp/plots/`.
+
+### Python Golden Model
+
+`dsp/golden_model.py`
+
+The Golden Model independently calculates the expected output samples using integer arithmetic.
+
+Its processing sequence is:
+
+1. Load the three FIR coefficient files.
+2. Read input audio samples.
+3. Perform three FIR multiply-accumulate operations.
+4. Apply Q1.15 scaling and saturation.
+5. Apply independent Q8.8 gain control.
+6. Mix the three frequency bands.
+7. Apply final output saturation.
+8. Generate `expected_output.mem`.
+
+The reference model follows the fixed-point arithmetic contract used by the RTL design.
+
+---
+
+## 8. Simulation and Verification
+
+### Requirements
+
+- Python 3
+- NumPy
+- SciPy
+- Matplotlib
+- ModelSim / QuestaSim or Icarus Verilog
+
+### Step 1 — Install Python Dependencies
+
+Run from the repository root:
+
+```powershell
+pip install numpy scipy matplotlib
+```
+
+### Step 2 — Generate FIR Coefficients
+
+```powershell
+python dsp/coeff_gen.py
+```
+
+Generated files:
+
+```text
+dsp/coefficients/
+├── bass_coeff.mem
+├── mid_coeff.mem
+└── treble_coeff.mem
+
+dsp/plots/
+├── bass_response.png
+├── mid_response.png
+└── treble_response.png
+```
+
+### Step 3 — Generate Expected Output
+
+```powershell
+python dsp/golden_model.py
+```
+
+The script reads `data/input_samples.mem` and generates:
+
+```text
+data/expected_output.mem
+```
+
+### Step 4 — Run RTL Simulation
+
+For Icarus Verilog, run from the repository root:
+
+```powershell
+iverilog -g2012 -o simulation/equalizer_sim rtl/*.v tb/tb_audio_equalizer.v
+vvp simulation/equalizer_sim
+```
+
+Alternatively, use ModelSim / QuestaSim:
+
+```powershell
+vlib work
+
+vlog rtl/*.v tb/tb_audio_equalizer.v
+
+vsim -c tb_audio_equalizer -do "run -all; quit -f"
+```
+
+The testbench uses the generated input and expected output files to check the RTL implementation.
+
+**Important:** The simulation commands above are suggested execution commands based on the repository structure. Successful execution and passing results must be confirmed using the actual simulator and testbench environment.
+
+---
+
+## 9. Verification Test Plan
+
+The verification environment covers the following scenarios:
+
+| Test Case | Verification Purpose |
+|---|---|
+| Zero Input | Checks that zero input produces zero output |
+| Impulse Input | Evaluates FIR tap ordering and filter history |
+| Individual Bands | Tests each frequency band independently |
+| Mute | Checks zero output when all gains are disabled |
+| Fractional Gains | Verifies Q8.8 fixed-point multiplication |
+| Negative Gains | Checks signed arithmetic behavior |
+| High Gain | Tests saturation under large gain values |
+| Extreme Samples | Checks numerical boundary conditions |
+| Random Samples | Exercises different input and gain combinations |
+| Valid Gaps | Checks sample history progression |
+| Reset During Traffic | Verifies internal state clearing |
+| Tail and Idle | Checks residual filter state and unwanted outputs |
+
+### Verification Method
+
+A file-driven Verilog testbench instantiates the top-level equalizer and compares valid RTL outputs against the expected signed 16-bit reference samples.
+
+The scoreboard checks:
+
+- Output validity.
+- Exact sample-by-sample numerical matching.
+- Reset behavior.
+- Valid sample handling.
+- Missing or unexpected output transactions.
+- Unknown output values.
+
+The verification fixture contains 2,114 stimulus cycles, including 1,777 accepted samples.
+
+**Verification status:** The repository's `Verification.md` records that RTL simulation was not run in the original verification environment. Therefore, these stimulus counts are not evidence of successful RTL comparisons. Actual PASS results and mismatch counts must be recorded after running the simulator.
+
+---
+
+## 10. Limitations and Future Improvements
+
+The current project has several limitations:
+
+- The default coefficient files are synthetic verification fixtures and do not establish final audio frequency response or crossover quality.
+- The design has not been claimed as a physically verified FPGA or ASIC implementation.
+- Actual DSP performance requires validation using approved filter coefficients.
+- Functional verification must be completed with the intended simulator before final project sign-off.
+- The current architecture focuses on fixed-point digital signal processing rather than a complete audio playback system.
+
+Potential future improvements include:
+
+- Validate the frequency response of all three filters using approved DSP coefficients.
+- Implement and test the design on an FPGA platform.
+- Integrate an audio input/output interface.
+- Add real-time gain adjustment.
+- Evaluate audio quality using real audio signals.
+- Optimize FIR implementation for hardware resource utilization.
+
+---
+
+## 11. Documentation
+
+Additional project documentation:
+
+- [RTL Interface Contract](docs/RTL_INTERFACE_CONTRACT.md)
+- [Final Project Report](docs/FINAL_REPORT.md)
+- [Verification Documentation](Verification.md)
+
+---
+
+## 12. Course Information
+
+**Course:** DGT302 — Digital Signal Processing
+
+**Project:** Digital Audio Equalizer using Verilog HDL
+
+**Main Topics:**
+- Digital Signal Processing
+- FIR Filter Design
+- Linear Phase Filters
+- Hamming Window
+- Fixed-Point Arithmetic
+- Digital Audio Processing
+- Gain Control and Signal Mixing
+- Verilog RTL Design
+- Functional Verification
+
+**Repository:** [Digital-Audio-Equalizer-Verilog](https://github.com/Chun241006/Digital-Audio-Equalizer-Verilog)
+
