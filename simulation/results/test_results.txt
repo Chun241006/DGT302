@@ -1,0 +1,4 @@
+TEST 0 (continuous): samples=1010 errors=0
+TEST 1 (valid gaps): samples=1010 errors=0
+SUMMARY compared=2021 errors=0
+OVERALL PASS
