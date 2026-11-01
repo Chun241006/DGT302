@@ -10,6 +10,23 @@ The design uses **31-tap Type-I Linear Phase FIR filters** with Hamming window c
 
 ---
 
+## Table of Contents
+
+1. [System Architecture](#1-system-architecture--top-down-design)
+2. [Key Features](#2-key-features)
+3. [System Specifications](#3-system-specifications)
+4. [RTL Modules](#4-rtl-modules)
+5. [Repository Structure](#5-repository-structure)
+6. [Fixed-Point Arithmetic Design](#6-fixed-point-arithmetic-design)
+7. [Python DSP Tools and Golden Model](#7-python-dsp-tools-and-golden-model)
+8. [Simulation and Verification](#8-simulation-and-verification)
+9. [Verification Test Plan](#9-verification-test-plan)
+10. [Limitations and Future Improvements](#10-limitations-and-future-improvements)
+11. [Documentation](#11-documentation)
+12. [Course Information](#12-course-information)
+
+---
+
 ## 1. System Architecture / Top-Down Design
 
 The equalizer consists of three parallel FIR filter branches. Each branch extracts a different frequency range, applies an independent gain, and sends its output to a common mixer.
@@ -177,10 +194,9 @@ The system uses fixed-point arithmetic to represent audio samples, FIR coefficie
 
 Each FIR filter performs a multiply-accumulate operation:
 
-\[
-y[n]=\sum_{k=0}^{30}h[k]x[n-k]
-\]
-
+$$
+y[n] = \sum_{k=0}^{30} h[k]x[n-k]
+$$
 Where:
 
 - \(x[n]\): Input audio sample.
