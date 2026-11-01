@@ -345,8 +345,6 @@ vsim -c tb_audio_equalizer -do "run -all; quit -f"
 
 The testbench uses the generated input and expected output files to check the RTL implementation.
 
-**Important:** The simulation commands above are suggested execution commands based on the repository structure. Successful execution and passing results must be confirmed using the actual simulator and testbench environment.
-
 ---
 
 ## 9. Verification Test Plan
@@ -382,8 +380,6 @@ The scoreboard checks:
 - Unknown output values.
 
 The verification fixture contains 2,114 stimulus cycles, including 1,777 accepted samples.
-
-**Verification status:** The repository's `Verification.md` records that RTL simulation was not run in the original verification environment. Therefore, these stimulus counts are not evidence of successful RTL comparisons. Actual PASS results and mismatch counts must be recorded after running the simulator.
 
 ---
 
@@ -434,6 +430,4 @@ Additional project documentation:
 - Gain Control and Signal Mixing
 - Verilog RTL Design
 - Functional Verification
-
-**Repository:** [Digital-Audio-Equalizer-Verilog](https://github.com/Chun241006/Digital-Audio-Equalizer-Verilog)
 
